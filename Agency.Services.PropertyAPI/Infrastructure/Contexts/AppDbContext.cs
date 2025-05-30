@@ -10,5 +10,7 @@ namespace Agency.Services.PropertyAPI.Infrastructure.Contexts
         }
         
         public DbSet<Property> Properties { get; set; }
+
+        // aici sa fie lucrul cu baza de date pentru proprietati
     }
 }

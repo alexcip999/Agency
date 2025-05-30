@@ -1,4 +1,4 @@
-﻿using Agency.AuthAPI.Domain.Entities;
+﻿using Agency.AuthAPI.Infrastructure.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;

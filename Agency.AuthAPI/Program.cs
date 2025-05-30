@@ -1,6 +1,6 @@
-using Agency.AuthAPI.Application.Interfaces;
 using Agency.AuthAPI.Application.Services;
-using Agency.AuthAPI.Domain.Entities;
+using Agency.AuthAPI.Domain.Contracts;
+using Agency.AuthAPI.Infrastructure.Entities;
 using Agency.Services.AuthAPI.Infrastructure.Contexts;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;

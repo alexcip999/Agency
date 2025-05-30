@@ -1,7 +1,6 @@
-﻿using Agency.AuthAPI.Application.Interfaces;
+﻿using Agency.AuthAPI.Domain.Contracts;
 using Agency.AuthAPI.Domain.Dto;
 using Agency.Services.AuthAPI.Domain.Dto;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Agency.AuthAPI.API.Controllers
@@ -48,7 +47,7 @@ namespace Agency.AuthAPI.API.Controllers
         [HttpPost("AssignRole")]
         public async Task<IActionResult> AssignRole([FromBody] RegisterRequestDto model)
         {
-            var assignRoleSuccessful = await _authService.AssignRole(model.Email, model.Role.ToUpper());
+            var assignRoleSuccessful = await _authService.AssignRole(model.Email, model.Role?.ToUpper());
             if (!assignRoleSuccessful)
             {
                 _response.IsSuccess = false;
@@ -57,5 +56,68 @@ namespace Agency.AuthAPI.API.Controllers
             }
             return Ok(_response);
         }
+
+        [HttpDelete("DeleteUser/{userId}")]
+        public async Task<IActionResult> DeleteUser(Guid userId)
+        {
+            var result = await _authService.DeleteUser(userId);
+            if (!result)
+            {
+                _response.IsSuccess = false;
+                _response.Message = "User not found or could not be deleted.";
+                return NotFound(_response);
+            }
+            _response.IsSuccess = true;
+            _response.Message = "User deleted successfully.";
+            return Ok(_response);
+        }
+
+        [HttpPost("ChangeRoleUser")]
+        public async Task<IActionResult> ChangeRoleUser([FromBody] ChangeRoleUserDto model)
+        {
+            var result = await _authService.ChangeRoleUser(model.UserId, model.NewRole);
+            if (!result)
+            {
+                _response.IsSuccess = false;
+                _response.Message = "Role change failed.";
+                return BadRequest(_response);
+            }
+            _response.IsSuccess = true;
+            _response.Message = "Role changed successfully.";
+            return Ok(_response);
+        }
+
+        [HttpPut("EditUser")]
+        public async Task<IActionResult> EditUser([FromBody] EditUserDto model)
+        {
+            var result = await _authService.EditUser(model.UserId, model.NewName, model.NewEmail, model.NewPhone);
+            if (!result)
+            {
+                _response.IsSuccess = false;
+                _response.Message = "User update failed.";
+                return BadRequest(_response);
+            }
+            _response.IsSuccess = true;
+            _response.Message = "User updated successfully.";
+            return Ok(_response);
+        }
+
+        [HttpGet("ExportCSV")]
+        public async Task<IActionResult> ExportCSV()
+        {
+            var csv = await _authService.ExportCSV();
+            var bytes = System.Text.Encoding.UTF8.GetBytes(csv);
+            return File(bytes, "text/csv", "users.csv");
+        }
+
+        [HttpGet("GetAllUsers")]
+        public async Task<IActionResult> GetAllUsers()
+        {
+            var users = await _authService.GetAllUsers();
+            _response.Result = users;
+            _response.IsSuccess = true;
+            return Ok(_response);
+        }
     }
+
 }

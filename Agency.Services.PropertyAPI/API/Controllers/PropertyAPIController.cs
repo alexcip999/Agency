@@ -106,6 +106,7 @@ namespace Agency.Services.PropertyAPI.API.Controllers
         }
 
         [HttpDelete]
+        [Route("{id:Guid}")]
         public ResponseDto DeleteProperty(Guid id)
         {
             try

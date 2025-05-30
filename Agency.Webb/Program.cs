@@ -1,8 +1,7 @@
-using Agency.Web.Application.Interfaces;
-using Agency.Web.Application.Services;
-using Agency.Webb.Application.Interfaces;
-using Agency.Webb.Application.Services;
-using Agency.Webb.Domain.Utility;
+using Agency.Web.Controllers.Application.Interfaces;
+using Agency.Web.Controllers.Application.Services;
+using Agency.Web.Models.Domain.Utility;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,15 +11,26 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddHttpClient();
 builder.Services.AddHttpClient<IPropertyService, PropertyService>();
+builder.Services.AddHttpClient<IReservationService, ReservationService>();
 builder.Services.AddHttpClient<IAuthService, AuthService>();
 
 SD.PropertyAPIBase = builder.Configuration["ServiceUrls:PropertyAPI"];
 SD.AuthAPIBase = builder.Configuration["ServiceUrls:AuthAPI"];
+SD.ReservationAPIBase = builder.Configuration["ServiceUrls:ReservationAPI"];
 
 builder.Services.AddScoped<IBaseService, BaseService>();
 builder.Services.AddScoped<IPropertyService, PropertyService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<ITokenProvider, TokenProvider>();
+builder.Services.AddScoped<IReservationService, ReservationService>();
 
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.ExpireTimeSpan = TimeSpan.FromHours(10);
+        options.LoginPath = "/Auth/Login";
+        options.AccessDeniedPath = "/Auth/AccessDenied";
+    });
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -35,7 +45,7 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
-
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(

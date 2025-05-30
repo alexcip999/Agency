@@ -1,0 +1,54 @@
+﻿@using Agency.Web.Models.Domain.Dto
+@model List<UserDto>
+@{
+    ViewData["Title"] = "Users";
+}
+
+<h2>Users</h2>
+<a asp-action="ExportCSV" class="btn btn-outline-secondary mb-2">Export CSV</a>
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Email</th>
+            <th>Name</th>
+            <th>Phone</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var user in Model)
+        {
+            <tr>
+                <form asp-action="EditUser" method="post">
+                <td>
+                    <input type="hidden" name="Id" value="@user.Id" />
+                    <input name="Email" value="@user.Email" class="form-control" />
+                </td>
+                <td>
+                    <input name="Name" value="@user.Name" class="form-control" />
+                </td>
+                <td>
+                    <input name="PhoneNumber" value="@user.PhoneNumber" class="form-control" />
+                </td>
+                <td>
+                    <button type="submit" class="btn btn-sm btn-primary">Save</button>
+                    <form asp-action="DeleteUser" method="post" style="display:inline;">
+                        <input type="hidden" name="id" value="@user.Id" />
+                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                    </form>
+                    <form asp-action="ChangeRoleUser" method="post" style="display:inline;">
+                        <input type="hidden" name="id" value="@user.Id" />
+                        <select name="newRole" class="form-select form-select-sm d-inline w-auto">
+                            <option value="ADMIN">ADMIN</option>
+                            <option value="CLIENT">CLIENT</option>
+                            <option value="EMPLOYEE">EMPLOYEE</option>
+                            <option value="MANAGER">MANAGER</option>
+                        </select>
+                        <button type="submit" class="btn btn-sm btn-warning">Change Role</button>
+                    </form>
+                </td>
+                </form>
+            </tr>
+        }
+    </tbody>
+</table>

@@ -1,8 +1,10 @@
-﻿using Agency.AuthAPI.Application.Interfaces;
+﻿using Agency.AuthAPI.Domain.Contracts;
 using Agency.AuthAPI.Domain.Dto;
-using Agency.AuthAPI.Domain.Entities;
+using Agency.AuthAPI.Infrastructure.Entities;
 using Agency.Services.AuthAPI.Infrastructure.Contexts;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using System.Text;
 
 namespace Agency.AuthAPI.Application.Services
 {
@@ -13,12 +15,12 @@ namespace Agency.AuthAPI.Application.Services
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IJwtTokenGenerator _jwtTokenGenerator;
 
-        public AuthService(AppDbContext db, IJwtTokenGenerator jwtTokenGenerator ,UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager)
+        public AuthService(AppDbContext db, IJwtTokenGenerator jwtTokenGenerator, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager)
         {
             _db = db;
             _userManager = userManager;
             _roleManager = roleManager;
-            _jwtTokenGenerator = jwtTokenGenerator; 
+            _jwtTokenGenerator = jwtTokenGenerator;
         }
 
         public async Task<bool> AssignRole(string emai, string roleName)
@@ -46,9 +48,10 @@ namespace Agency.AuthAPI.Application.Services
                 return new LoginResponseDto() { User = null, Token = "" };
             }
 
-            // if user was foumd and password is valid, generate token
+            // if user was found and password is valid, generate token
 
-            var token = _jwtTokenGenerator.GenerateToken(user);
+            var roles = await _userManager.GetRolesAsync(user);
+            var token = _jwtTokenGenerator.GenerateToken(user, roles);
 
             UserDto userDto = new()
             {
@@ -66,7 +69,6 @@ namespace Agency.AuthAPI.Application.Services
 
             return loginResponseDto;
         }
-
 
         public async Task<string> Register(RegisterRequestDto registerRequestDto)
         {
@@ -107,6 +109,75 @@ namespace Agency.AuthAPI.Application.Services
             }
 
             return "Error Encourated";
+        }
+
+        public async Task<bool> DeleteUser(Guid userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId.ToString());
+            if (user == null)
+                return false;
+
+            var result = await _userManager.DeleteAsync(user);
+            return result.Succeeded;
+        }
+
+        public async Task<bool> ChangeRoleUser(Guid userId, string newRole)
+        {
+            var user = await _userManager.FindByIdAsync(userId.ToString());
+            if (user == null)
+                return false;
+
+            var currentRoles = await _userManager.GetRolesAsync(user);
+            var removeResult = await _userManager.RemoveFromRolesAsync(user, currentRoles);
+            if (!removeResult.Succeeded)
+                return false;
+
+            if (!await _roleManager.RoleExistsAsync(newRole))
+                await _roleManager.CreateAsync(new IdentityRole(newRole));
+
+            var addResult = await _userManager.AddToRoleAsync(user, newRole);
+            return addResult.Succeeded;
+        }
+
+        public async Task<bool> EditUser(Guid userId, string newName, string newEmail, string newPhone)
+        {
+            var user = await _userManager.FindByIdAsync(userId.ToString());
+            if (user == null)
+                return false;
+
+            user.Name = newName;
+            user.Email = newEmail;
+            user.UserName = newEmail;
+            user.PhoneNumber = newPhone;
+
+            var result = await _userManager.UpdateAsync(user);
+            return result.Succeeded;
+        }
+
+        public async Task<string> ExportCSV()
+        {
+            var users = await _userManager.Users.ToListAsync();
+            var sb = new StringBuilder();
+            sb.AppendLine("Id,Email,Name,PhoneNumber");
+
+            foreach (var user in users)
+            {
+                sb.AppendLine($"{user.Id},{user.Email},{user.Name},{user.PhoneNumber}");
+            }
+
+            return sb.ToString();
+        }
+
+        public async Task<List<UserDto>> GetAllUsers()
+        {
+            var users = await _userManager.Users.ToListAsync();
+            return users.Select(u => new UserDto
+            {
+                Id = u.Id,
+                Email = u.Email,
+                Name = u.Name,
+                PhoneNumber = u.PhoneNumber
+            }).ToList();
         }
     }
 }

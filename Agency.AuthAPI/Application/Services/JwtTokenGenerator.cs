@@ -1,5 +1,5 @@
-﻿using Agency.AuthAPI.Application.Interfaces;
-using Agency.AuthAPI.Domain.Entities;
+﻿using Agency.AuthAPI.Domain.Contracts;
+using Agency.AuthAPI.Infrastructure.Entities;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -16,18 +16,20 @@ namespace Agency.AuthAPI.Application.Services
             _jwtOptions = jwtOptions.Value;
         }
 
-        public string GenerateToken(ApplicationUser application)
+        public string GenerateToken(ApplicationUser application, IEnumerable<string> roles)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
 
             var key = Encoding.ASCII.GetBytes(_jwtOptions.Secret);
 
             var claimList = new List<Claim>
-            {
-                new Claim(JwtRegisteredClaimNames.Email, application.Email),
-                new Claim(JwtRegisteredClaimNames.Sub, application.Id),
-                new Claim(JwtRegisteredClaimNames.Name, application.UserName),
-            };
+                {
+                    new Claim(JwtRegisteredClaimNames.Email, application.Email),
+                    new Claim(JwtRegisteredClaimNames.Sub, application.Id),
+                    new Claim(JwtRegisteredClaimNames.Name, application.UserName),
+                };
+
+            claimList.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
 
             var tokenDescriptor = new SecurityTokenDescriptor
             {
@@ -39,8 +41,9 @@ namespace Agency.AuthAPI.Application.Services
             };
 
             var token = tokenHandler.CreateToken(tokenDescriptor);
-            return tokenHandler.WriteToken(token);
 
+            // Fix: Use the token directly instead of attempting to read it as a JwtSecurityToken
+            return tokenHandler.WriteToken(token);
         }
     }
 }

@@ -1,0 +1,66 @@
+﻿@using Agency.Web.Models.Domain.Dto
+@model ReservationDto
+
+@if (Model.ReservationHeader != null && Model.ReservationDetails?.Any() == true)
+{
+    <form method="post" asp-action="EmailReservation">
+        <br />
+        <input asp-for="ReservationHeader.UserId" hidden />
+        <input asp-for="ReservationHeader.ReservationId" hidden />
+
+        <div class="">
+            <div class="card border mt-4 container">
+                <div class="card-header bg-dark text-light ml-0 row">
+                    <div class="col-6">
+                        <h3 class="text-success"><i class="bi bi-house-door-fill"></i> &nbsp; Your Reservations</h3>
+                    </div>
+                    <div class="col-6 text-end">
+                        <a asp-action="Index" asp-controller="Home" class="btn btn-outline-warning mt-2 btn-sm">Make Another Reservation</a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="d-none d-lg-block">
+                        <div class="row text-info">
+                            <div class="col-lg-3">Property</div>
+                            <div class="col-lg-6">Details</div>
+                            <div class="col-lg-3">Reservation Date</div>
+                        </div>
+                    </div>
+                    <hr />
+
+                    @foreach (var resObj in Model.ReservationDetails)
+                    {
+                        <div class="row h-100">
+                            <div class="col-12 col-md-3 text-center py-2">
+                                <img src="@resObj.Property?.ImageUrl" class="rounded" width="100%" alt="Property image" />
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <h5>@resObj.Property?.Address</h5>
+                                <div style="font-size: 11px;">@Html.Raw(resObj.Property?.Description)</div>
+                            </div>
+                            <div class="col-12 col-md-3 pt-md-4" style="font-size: 13px;">
+                                <span>@Model.ReservationHeader.ReservationDate.ToString("yyyy-MM-dd")</span>
+                            </div>
+                        </div>
+                    }
+
+                    <hr />
+                </div>
+                <div class="card-footer row">
+                    <div class="col-6 col-md-3">
+                        <button type="submit" class="btn btn-outline-danger form-control">Email Reservation</button>
+                    </div>
+                    <div class="col-6 col-md-3 offset-md-6">
+                        <a asp-action="ConfirmReservation" class="btn btn-success form-control">Confirm</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+}
+else
+{
+    <div>
+        <p>No reservations found.</p>
+    </div>
+}
